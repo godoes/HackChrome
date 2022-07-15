@@ -1,13 +1,12 @@
 # HackChrome
 
-[![Build Status](https://travis-ci.com/cckuailong/HackChrome.svg?branch=master)](https://travis-ci.com/cckuailong/HackChrome)
+[![Build Status](https://travis-ci.com/godoes/HackChrome.svg?branch=master)](https://travis-ci.com/godoes/HackChrome)
 
-[English ReadMe](https://github.com/cckuailong/HackChrome/blob/master/README.md) || 
-[中文 ReadMe](https://github.com/cckuailong/HackChrome/blob/master/README_zh.md)
+**English** | [中文](https://github.com/godoes/HackChrome/blob/master/README_zh.md)
 
 Get the User:Password from Chrome(include version < 80 and version > 80)
 
-## Chrome version Affact
+## Chrome version Affect
 
 All version
 
@@ -17,15 +16,32 @@ Windows
 
 ## Usage
 
-- Download the exe file [here](https://github.com/cckuailong/HackChrome/releases/tag/v0.1)
+- Install
+
+  ```shell
+  set CGO_ENABLED=1 & go install github.com/godoes/HackChrome@latest
+  ```
 
 - Open cmd or powershell
 
+  ```shell
+  HackChrome -h
+
+  # output:
+  Usage of HackChrome:
+    -edge
+          true or false, default is false and chrome is used.
+  ```
+
 - Run
 
-```
-Hackone.exe > res.txt
-```
+  ```shell
+  # Google Chrome:
+  HackChrome > netpass.txt
+
+  # Microsoft Edge:
+  HackChrome -edge > netpass.txt
+  ```
 
 ## Demo
 
@@ -45,15 +61,15 @@ Finally, We get the plaintext of the User:Password pairs stored in Chrome
 
 Based on the Algorithm used by "version < 80", It use AES-GCM to encrypt the password via a <master key> and a <nounce>.
 
-The <master key> can be found in the "Local State" file, and can be decypted by "CryptUnprotectData" mentioned above.
+The <master key> can be found in the "Local State" file, and can be decrypted by "CryptUnprotectData" mentioned above.
 
-The <nounce> can be found at the begin of the encrypted_password.
+The <nounce> can be found at the beginning of the encrypted_password.
 
-Therefore, we can decrpted all the password.
+Therefore, we can decrypt all the password.
 
 - Merge the result
 
-If someone update the Chrome recently, we need to find the two ways of User:Password pairs.
+If someone updates the Chrome recently, we need to find the two ways of User:Password pairs.
 
 What's more, I use some rules to merge the results into an array.
 
