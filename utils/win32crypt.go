@@ -5,39 +5,40 @@ import (
 	"unsafe"
 )
 
-type DATA_BLOB struct {
+type DataBlob struct {
 	cbData uint32
 	pbData *byte
 }
 
-func NewBlob(d []byte) *DATA_BLOB {
+func NewBlob(d []byte) *DataBlob {
 	if len(d) == 0 {
-		return &DATA_BLOB{}
+		return &DataBlob{}
 	}
-	return &DATA_BLOB{
+	return &DataBlob{
 		pbData: &d[0],
 		cbData: uint32(len(d)),
 	}
 }
 
-func (b *DATA_BLOB) ToByteArray() []byte {
+func (b *DataBlob) ToByteArray() []byte {
 	d := make([]byte, b.cbData)
 	copy(d, (*[1 << 30]byte)(unsafe.Pointer(b.pbData))[:])
 	return d
 }
 
-func WinDecypt(data []byte) ([]byte, error){
-	dllcrypt32 := syscall.NewLazyDLL("Crypt32.dll")
-	dllkernel32 := syscall.NewLazyDLL("Kernel32.dll")
-	procDecryptData := dllcrypt32.NewProc("CryptUnprotectData")
-	procLocalFree := dllkernel32.NewProc("LocalFree")
+func WinDecrypt(data []byte) ([]byte, error) {
+	dllCrypt32 := syscall.NewLazyDLL("Crypt32.dll")
+	dllKernel32 := syscall.NewLazyDLL("Kernel32.dll")
+	procDecryptData := dllCrypt32.NewProc("CryptUnprotectData")
+	procLocalFree := dllKernel32.NewProc("LocalFree")
 
-	var outblob DATA_BLOB
-	r, _, err := procDecryptData.Call(uintptr(unsafe.Pointer(NewBlob(data))), 0, 0, 0, 0, 0, uintptr(unsafe.Pointer(&outblob)))
+	var outBlob DataBlob
+	r, _, err := procDecryptData.Call(uintptr(unsafe.Pointer(NewBlob(data))), 0, 0, 0, 0, 0, uintptr(unsafe.Pointer(&outBlob)))
 	if r == 0 {
 		return nil, err
 	}
-	defer procLocalFree.Call(uintptr(unsafe.Pointer(outblob.pbData)))
-	return outblob.ToByteArray(), nil
+	defer func(procLocalFree *syscall.LazyProc, a ...uintptr) {
+		_, _, _ = procLocalFree.Call(a...)
+	}(procLocalFree, uintptr(unsafe.Pointer(outBlob.pbData)))
+	return outBlob.ToByteArray(), nil
 }
-
